@@ -23,4 +23,4 @@ source = "vcs"
 version-file = "src/ezmsg/capture/__version__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ezmsg/capture"]
+packages = ["src/ezmsg"]
