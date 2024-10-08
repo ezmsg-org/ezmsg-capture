@@ -23,7 +23,7 @@ class VideoCapture(ez.Unit):
     SETTINGS = VideoCaptureSettings
     STATE = VideoCaptureState
 
-    SIGNAL_OUT = ez.OutputStream(AxisArray)
+    OUTPUT_SIGNAL = ez.OutputStream(AxisArray)
 
     async def initialize(self) -> None:
         if self.SETTINGS.camera_index is None:
@@ -34,8 +34,9 @@ class VideoCapture(ez.Unit):
         self.STATE.cam = cv2.VideoCapture(index)
         self.STATE.width = int(self.STATE.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.STATE.height = int(self.STATE.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.STATE.fps = self.STATE.cam.get(cv2.CAP_PROP_FPS)
 
-    @ez.publisher(SIGNAL_OUT)
+    @ez.publisher(OUTPUT_SIGNAL)
     async def on_image(self):
         while True:
             _, frame = self.STATE.cam.read()
@@ -43,7 +44,7 @@ class VideoCapture(ez.Unit):
                 frame = cv2.cvtColor(frame, self.SETTINGS.color_conversion)
             if frame.ndim == 2:
                 yield (
-                    self.SIGNAL_OUT,
+                    self.OUTPUT_SIGNAL,
                     AxisArray(
                         data=frame[None],
                         dims=["time", "rows", "cols"],
@@ -58,7 +59,7 @@ class VideoCapture(ez.Unit):
                 )
             elif frame.ndim == 3:
                 yield (
-                    self.SIGNAL_OUT,
+                    self.OUTPUT_SIGNAL,
                     AxisArray(
                         data=frame[None],
                         dims=["time", "rows", "cols", "color"],
