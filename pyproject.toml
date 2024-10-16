@@ -24,3 +24,8 @@ version-file = "src/ezmsg/capture/__version__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ezmsg"]
+
+[tool.uv]
+dev-dependencies = [
+    "ezmsg-rerun>=0.1.0",
+]
