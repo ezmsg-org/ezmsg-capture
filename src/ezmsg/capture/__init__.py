@@ -2,6 +2,7 @@ import cv2
 import time
 import ezmsg.core as ez
 from ezmsg.util.messages.axisarray import AxisArray
+from ezmsg.util.rate import Rate
 from typing import Iterable, Optional
 
 from .__version__ import __version__ as __version__
@@ -13,6 +14,7 @@ class VideoCaptureSettings(ez.Settings):
     width: Optional[int] = None
     height: Optional[int] = None
     crop: Optional[Iterable[slice]] = None
+    fps_limit: float = 0.0
 
 
 class VideoCaptureState(ez.State):
@@ -20,6 +22,7 @@ class VideoCaptureState(ez.State):
     fps: float
     width: int
     height: int
+    rate: Rate
 
 
 class VideoCapture(ez.Unit):
@@ -42,7 +45,10 @@ class VideoCapture(ez.Unit):
 
         self.STATE.width = int(self.STATE.cam.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.STATE.height = int(self.STATE.cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.STATE.fps = self.STATE.cam.get(cv2.CAP_PROP_FPS)
+        self.STATE.fps = min(
+            self.STATE.cam.get(cv2.CAP_PROP_FPS), self.SETTINGS.fps_limit
+        )
+        self.STATE.rate = Rate(self.SETTINGS.fps_limit)
 
     @ez.publisher(OUTPUT_SIGNAL)
     async def on_image(self):
@@ -87,3 +93,4 @@ class VideoCapture(ez.Unit):
                 raise Exception(
                     "Expected image from webcam to be either two or three dimensions"
                 )
+            await self.STATE.rate.sleep()
